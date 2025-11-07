@@ -338,7 +338,8 @@ with st.expander("📋 查看完整得獎名單"):
         st.dataframe(
             df,
             use_container_width=True,
-            hide_index=True
+            hide_index=True,
+            height=None  # 設定為 None 讓表格完整顯示所有資料
         )
     else:
         st.warning("目前尚無得獎名單資料")
