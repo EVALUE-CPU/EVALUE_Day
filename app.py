@@ -335,12 +335,15 @@ elif search_button and not search_number:
 # 顯示完整名單
 with st.expander("📋 查看完整得獎名單"):
     if not df.empty:
+        # 計算適當的高度，每行約35px，最少200px
+        table_height = max(200, min(len(df) * 35 + 50, 600))
         st.dataframe(
             df,
             use_container_width=True,
             hide_index=True,
-            height=None  # 設定為 None 讓表格完整顯示所有資料
+            height=table_height
         )
+        st.info(f"共有 {len(df)} 位得獎者")
     else:
         st.warning("目前尚無得獎名單資料")
 
