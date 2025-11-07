@@ -185,12 +185,22 @@ css_styles = """
         padding: 0.5rem;
         border-radius: 10px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        transition: transform 0.3s ease;
+    }
+    
+    .top-left-logo:hover {
+        transform: scale(1.05);
     }
     
     .top-left-logo img {
         height: 40px;
         display: block;
         max-width: 120px;
+        transition: opacity 0.3s ease;
+    }
+    
+    .top-left-logo img:hover {
+        opacity: 0.8;
     }
     
     /* 響應式設計 */
@@ -232,9 +242,12 @@ st.markdown(css_styles, unsafe_allow_html=True)
 
 # ==================== 左上角 Logo ====================
 logo_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/logo.png"
+facebook_url = "https://www.facebook.com/evaluetw/?locale=zh_TW"
 st.markdown(f"""
 <div class="top-left-logo">
-    <img src="{logo_url}" alt="EVALUE Logo">
+    <a href="{facebook_url}" target="_blank" style="text-decoration: none;">
+        <img src="{logo_url}" alt="EVALUE Logo" style="cursor: pointer;">
+    </a>
 </div>
 """, unsafe_allow_html=True)
 
@@ -365,4 +378,3 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
-
