@@ -322,9 +322,18 @@ if search_button and search_number:
             st.success(f"🎉 恭喜！您中獎了！")
             st.markdown(f"""
             <div class="highlight-box">
-                <h3>中獎資訊</h3>
-                <p><strong>抽獎序號：</strong>{result.iloc[0]['序號']}</p>
-                <p><strong>獎項：</strong>{result.iloc[0]['獎項']}</p>
+                <h2 style="color: white !important; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
+                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0;"><strong>抽獎序號：</strong>{result.iloc[0]['序號']}</p>
+                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0;"><strong>獎項：</strong>{result.iloc[0]['獎項']}</p>
+                
+                <hr style="border: none; border-top: 2px solid rgba(255,255,255,0.3); margin: 1.5rem 0;">
+                
+                <h3 style="color: white !important; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
+                <ul style="font-size: 1.1rem; line-height: 1.6; margin: 0; padding-left: 1.2rem;">
+                    <li>請攜帶抽獎券存根及身分證件至服務台領獎</li>
+                    <li>領獎時間：活動當日 10:00 - 17:00</li>
+                    <li>逾時未領取視同放棄得獎資格</li>
+                </ul>
             </div>
             """, unsafe_allow_html=True)
         else:
