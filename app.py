@@ -332,8 +332,23 @@ if search_button and search_number:
 elif search_button and not search_number:
     st.warning("請輸入抽獎序號")
 
+# 領獎須知
+st.markdown("""
+<div class="info-box">
+    <strong>📌 領獎須知：</strong>
+    <ul style="margin-top: 0.5rem;">
+        <li>請攜帶抽獎券存根及身分證件至服務台領獎</li>
+        <li>領獎時間：活動當日 10:00 - 17:00</li>
+        <li>逾時未領取視同放棄得獎資格</li>
+    </ul>
+</div>
+""", unsafe_allow_html=True)
+
+# ==================== 完整抽獎名單 ====================
+st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
+
 # 顯示完整名單
-with st.expander("📋 查看完整得獎名單"):
+with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
         # 計算適當的高度，每行約35px，最少200px
         table_height = max(200, min(len(df) * 35 + 50, 600))
@@ -346,18 +361,6 @@ with st.expander("📋 查看完整得獎名單"):
         st.info(f"共有 {len(df)} 位得獎者")
     else:
         st.warning("目前尚無得獎名單資料")
-
-# 領獎須知
-st.markdown("""
-<div class="info-box">
-    <strong>📌 領獎須知：</strong>
-    <ul style="margin-top: 0.5rem;">
-        <li>請攜帶抽獎券存根及身分證件至服務台領獎</li>
-        <li>領獎時間：活動當日 10:00 - 17:00</li>
-        <li>逾時未領取視同放棄得獎資格</li>
-    </ul>
-</div>
-""", unsafe_allow_html=True)
 
 # ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
