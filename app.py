@@ -321,27 +321,48 @@ if search_button and search_number:
         if not result.empty:
             st.success(f"🎉 恭喜！您中獎了！")
             
-            # 使用單一框顯示所有內容
-            st.markdown(f"""
-            <div class="highlight-box">
-                <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
-                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
-                    <strong>抽獎序號：</strong>{result.iloc[0]['序號']}
-                </p>
-                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
-                    <strong>獎項：</strong>{result.iloc[0]['獎項']}
-                </p>
-                
-                <div style="border-top: 2px solid rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
-                
-                <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
-                <div style="font-size: 1.1rem; line-height: 1.6; color: white; padding-left: 1rem;">
-                    ✓ 請攜帶抽獎券存根及身分證件至服務台領獎<br>
-                    ✓ 領獎時間：活動當日 10:00 - 17:00<br>
-                    ✓ 逾時未領取視同放棄得獎資格
+            # 先嘗試簡化的HTML版本
+            try:
+                st.markdown(f"""
+                <div class="highlight-box">
+                    <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
+                    <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
+                        抽獎序號：{result.iloc[0]['序號']}
+                    </p>
+                    <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
+                        獎項：{result.iloc[0]['獎項']}
+                    </p>
+                    <div style="height: 2px; background: rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
+                    <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
+                    <p style="font-size: 1.1rem; line-height: 1.8; color: white; margin: 0;">
+                        ✓ 請攜帶抽獎券存根及身分證件至服務台領獎<br><br>
+                        ✓ 領獎時間：活動當日 10:00 - 17:00<br><br>
+                        ✓ 逾時未領取視同放棄得獎資格
+                    </p>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            except:
+                # 如果HTML還是有問題，使用純Streamlit的替代方案
+                # 創建一個視覺上相似的框
+                st.markdown("""
+                <div style="background: linear-gradient(45deg, rgba(253, 177, 67, 0.9), rgba(243, 114, 44, 0.9)); 
+                            color: white; padding: 2rem; border-radius: 12px; margin: 1rem 0;">
+                """, unsafe_allow_html=True)
+                
+                st.markdown("## 🎁 中獎資訊")
+                st.markdown(f"### 抽獎序號：{result.iloc[0]['序號']}")
+                st.markdown(f"### 獎項：{result.iloc[0]['獎項']}")
+                st.markdown("---")
+                st.markdown("## 📌 領獎須知：")
+                st.markdown("""
+                ✓ **請攜帶抽獎券存根及身分證件至服務台領獎**
+                
+                ✓ **領獎時間：活動當日 10:00 - 17:00**
+                
+                ✓ **逾時未領取視同放棄得獎資格**
+                """)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
         else:
             st.error("😢 很抱歉，此序號未中獎或序號不存在")
 elif search_button and not search_number:
