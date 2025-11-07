@@ -262,7 +262,7 @@ header_html = """
 st.markdown(header_html, unsafe_allow_html=True)
 
 # ==================== 抽獎查詢 ====================
-st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢(搜尋抽獎序號)</h2></div>', unsafe_allow_html=True)
 
 # 載入得獎名單
 def load_lottery_data():
@@ -385,3 +385,4 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
