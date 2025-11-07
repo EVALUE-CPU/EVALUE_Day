@@ -321,24 +321,25 @@ if search_button and search_number:
         if not result.empty:
             st.success(f"🎉 恭喜！您中獎了！")
             
-            # 分別使用兩個 markdown 區塊來避免 HTML 轉義問題
+            # 使用單一框顯示所有內容
             st.markdown(f"""
             <div class="highlight-box">
-                <h2 style="color: white !important; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
-                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0;"><strong>抽獎序號：</strong>{result.iloc[0]['序號']}</p>
-                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0;"><strong>獎項：</strong>{result.iloc[0]['獎項']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("""
-            <div class="highlight-box" style="margin-top: -1rem;">
-                <hr style="border: none; border-top: 2px solid rgba(255,255,255,0.3); margin: 1.5rem 0;">
-                <h3 style="color: white !important; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
-                <ul style="font-size: 1.1rem; line-height: 1.6; margin: 0; padding-left: 1.2rem;">
-                    <li>請攜帶抽獎券存根及身分證件至服務台領獎</li>
-                    <li>領獎時間：活動當日 10:00 - 17:00</li>
-                    <li>逾時未領取視同放棄得獎資格</li>
-                </ul>
+                <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
+                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
+                    <strong>抽獎序號：</strong>{result.iloc[0]['序號']}
+                </p>
+                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
+                    <strong>獎項：</strong>{result.iloc[0]['獎項']}
+                </p>
+                
+                <div style="border-top: 2px solid rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
+                
+                <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
+                <div style="font-size: 1.1rem; line-height: 1.6; color: white; padding-left: 1rem;">
+                    ✓ 請攜帶抽獎券存根及身分證件至服務台領獎<br>
+                    ✓ 領獎時間：活動當日 10:00 - 17:00<br>
+                    ✓ 逾時未領取視同放棄得獎資格
+                </div>
             </div>
             """, unsafe_allow_html=True)
         else:
