@@ -109,14 +109,20 @@ st.markdown("""
 
 # ==================== 抽獎名單載入 ====================
 @st.cache_data
-def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料，使用檔案內容 hash 判斷更新"""
+def load_lottery_data(last_hash=None):
+    """從 GitHub 載入抽獎名單資料，只有檔案變更時才更新"""
     try:
-        github_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/winners.csv?t={int(time.time())}"
+        github_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv?t={int(time.time())}"
         response = requests.get(github_url)
         response.encoding = 'utf-8'
         csv_text = response.text.strip()
         file_hash = hashlib.md5(csv_text.encode('utf-8')).hexdigest()
+
+        # 自動刷新頁面
+        if last_hash and last_hash != file_hash:
+            st.cache_data.clear()
+            st.experimental_rerun()
+
         df = pd.read_csv(StringIO(csv_text))
         if "獎項" in df.columns and "序號" in df.columns:
             return df[["獎項", "序號"]], file_hash
@@ -190,7 +196,7 @@ st.markdown("""
 
 # ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
-map_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/map.png"
+map_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png"
 st.markdown(f"""
 <div style="text-align: center;">
     <img src="{map_url}" alt="活動地圖" style="max-width: 100%; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
@@ -205,6 +211,3 @@ st.markdown("""
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
 </div>
 """, unsafe_allow_html=True)
-
-
-
