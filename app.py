@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import re
 import time
-import hashlib
 import requests
 from datetime import datetime
 
@@ -14,7 +13,70 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 自定義CSS樣式
+# ==================== 核心即時更新功能 ====================
+
+# 1. 使用更短的快取時間
+@st.cache_data(ttl=5)  # 5秒快取
+def load_lottery_data_with_timestamp():
+    """載入資料並加上時間戳避免快取"""
+    try:
+        github_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv"
+        # 加上時間戳參數避免瀏覽器快取
+        timestamp = int(time.time())
+        url_with_timestamp = f"{github_url}?t={timestamp}"
+        
+        df = pd.read_csv(url_with_timestamp, encoding='utf-8')
+        
+        if "獎項" in df.columns and "序號" in df.columns:
+            return df[["獎項", "序號"]], timestamp
+        else:
+            st.error("檔案格式錯誤：需包含「獎項」和「序號」欄位")
+            return pd.DataFrame(columns=["獎項", "序號"]), timestamp
+            
+    except Exception as e:
+        st.error(f"載入資料失敗：{str(e)}")
+        return pd.DataFrame(columns=["獎項", "序號"]), int(time.time())
+
+# 2. 自動重新整理功能
+def add_auto_refresh(interval_seconds=30):
+    """添加自動重新整理功能"""
+    st.markdown(f"""
+    <meta http-equiv="refresh" content="{interval_seconds}">
+    <script>
+        // 每隔指定秒數重新整理頁面
+        setTimeout(function() {{
+            window.location.reload();
+        }}, {interval_seconds * 1000});
+    </script>
+    """, unsafe_allow_html=True)
+
+# 3. 手動重新整理按鈕
+def add_refresh_button():
+    """添加手動重新整理按鈕"""
+    col1, col2, col3 = st.columns([2, 1, 2])
+    with col2:
+        if st.button("🔄 重新整理資料", type="secondary", use_container_width=True):
+            # 清除快取
+            st.cache_data.clear()
+            st.rerun()
+
+# 4. 顯示最後更新時間
+def show_update_status(timestamp):
+    """顯示更新狀態"""
+    update_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    st.markdown(f"""
+    <div style="text-align: center; padding: 0.5rem; background: linear-gradient(45deg, rgba(67, 170, 139, 0.1), rgba(39, 125, 161, 0.1)); 
+                border-radius: 8px; margin: 1rem 0; font-size: 0.9rem; color: #666;">
+        📊 資料最後更新時間：{update_time} | 🔄 每30秒自動檢查更新
+    </div>
+    """, unsafe_allow_html=True)
+
+# ==================== 應用程式開始 ====================
+
+# 啟用自動重新整理（30秒間隔）
+add_auto_refresh(30)
+
+# 你的原始CSS樣式
 css_styles = """
 <style>
     /* 隱藏側邊欄 */
@@ -207,31 +269,6 @@ css_styles = """
         opacity: 0.8;
     }
     
-    /* 即時更新狀態指示器 */
-    .update-status {
-        position: fixed;
-        top: 1rem;
-        right: 1rem;
-        z-index: 999999 !important;
-        background: rgba(67, 170, 139, 0.9);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-        transition: all 0.3s ease;
-    }
-    
-    .update-status.updating {
-        background: rgba(253, 177, 67, 0.9);
-        animation: pulse 1s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-    
     /* 響應式設計 */
     @media (max-width: 768px) {
         .main .block-container {
@@ -263,108 +300,17 @@ css_styles = """
         .top-left-logo img {
             height: 35px;
         }
-        
-        .update-status {
-            top: 0.5rem;
-            right: 0.5rem;
-            font-size: 0.7rem;
-            padding: 0.3rem 0.8rem;
-        }
     }
 </style>
 """
 
 st.markdown(css_styles, unsafe_allow_html=True)
 
-# ==================== 即時更新系統 ====================
-@st.cache_data(ttl=30)  # 30秒快取
-def get_file_hash(url):
-    """獲取檔案的 hash 值來檢測變更"""
-    try:
-        response = requests.head(url, timeout=5)
-        # 使用 ETag 或 Last-Modified 標頭
-        etag = response.headers.get('ETag', '')
-        last_modified = response.headers.get('Last-Modified', '')
-        return f"{etag}_{last_modified}"
-    except:
-        return str(time.time())
+# ==================== 載入資料 ====================
+df, timestamp = load_lottery_data_with_timestamp()
 
-@st.cache_data(ttl=10)  # 10秒快取，更頻繁檢查
-def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料"""
-    try:
-        # GitHub Raw URL
-        github_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv"
-        
-        # 檢查檔案是否有更新
-        file_hash = get_file_hash(github_url)
-        
-        # 讀取 CSV 檔案，加上時間戳避免快取
-        df = pd.read_csv(f"{github_url}?t={int(time.time())}", encoding='utf-8')
-        
-        # 確保欄位名稱正確
-        if "獎項" in df.columns and "序號" in df.columns:
-            return df[["獎項", "序號"]], file_hash
-        else:
-            st.error("檔案格式錯誤：需包含「獎項」和「序號」欄位")
-            return pd.DataFrame(columns=["獎項", "序號"]), file_hash
-            
-    except Exception as e:
-        st.error(f"載入資料失敗：{str(e)}")
-        return pd.DataFrame(columns=["獎項", "序號"]), ""
-
-# 初始化 session state
-if 'last_update' not in st.session_state:
-    st.session_state.last_update = time.time()
-if 'last_hash' not in st.session_state:
-    st.session_state.last_hash = ""
-
-# ==================== 自動重新整理設定 ====================
-# 在側邊欄添加重新整理間隔設定（僅供測試，實際部署時可隱藏）
-with st.sidebar:
-    st.subheader("⚙️ 即時更新設定")
-    auto_refresh = st.checkbox("啟用自動重新整理", value=True)
-    refresh_interval = st.slider("重新整理間隔（秒）", 5, 60, 30)
-    
-    if auto_refresh:
-        st.info(f"每 {refresh_interval} 秒自動檢查資料更新")
-    
-    # 手動重新整理按鈕
-    if st.button("🔄 立即重新整理"):
-        st.cache_data.clear()
-        st.rerun()
-
-# 自動重新整理腳本
-if auto_refresh:
-    st.markdown(f"""
-    <script>
-        setTimeout(function() {{
-            window.location.reload();
-        }}, {refresh_interval * 1000});
-    </script>
-    """, unsafe_allow_html=True)
-
-# ==================== 更新狀態指示器 ====================
-# 載入資料並檢查更新
-df, current_hash = load_lottery_data()
-is_updating = current_hash != st.session_state.last_hash
-
-if is_updating and st.session_state.last_hash != "":
-    st.session_state.last_update = time.time()
-    st.session_state.last_hash = current_hash
-    # 清除快取以確保資料是最新的
-    st.cache_data.clear()
-    df, current_hash = load_lottery_data()
-
-# 更新狀態指示器
-last_update_time = datetime.fromtimestamp(st.session_state.last_update).strftime("%H:%M:%S")
-status_class = "updating" if is_updating else ""
-
-st.markdown(f"""
-<div class="update-status {status_class}">
-    {'🔄 更新中...' if is_updating else f'✅ 最後更新: {last_update_time}'}
-</div>
-""", unsafe_allow_html=True)
+# 顯示更新狀態
+show_update_status(timestamp)
 
 # ==================== 左上角 Logo ====================
 logo_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/logo.png"
@@ -386,6 +332,9 @@ header_html = """
 </div>
 """
 st.markdown(header_html, unsafe_allow_html=True)
+
+# ==================== 手動重新整理按鈕 ====================
+add_refresh_button()
 
 # ==================== 抽獎查詢 ====================
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
@@ -452,9 +401,6 @@ st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2><
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 顯示資料更新資訊
-        st.info(f"📊 共有 {len(df)} 位得獎者 | 🕒 最後更新時間：{last_update_time}")
-        
         # 計算適當的高度，每行約35px，最少200px
         table_height = max(200, min(len(df) * 35 + 50, 600))
         st.dataframe(
@@ -463,6 +409,7 @@ with st.expander("📋 點擊展開完整得獎名單"):
             hide_index=True,
             height=table_height
         )
+        st.info(f"共有 {len(df)} 位得獎者")
     else:
         st.warning("目前尚無得獎名單資料")
 
@@ -493,14 +440,12 @@ st.markdown(f"""
 st.markdown("---")
 st.markdown('<div class="decoration">🎈 🎪 🎯 🎨 🎭 🎪 🎈</div>', unsafe_allow_html=True)
 
+update_time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
 footer_html = f"""
 <div style="text-align: center; padding: 2rem 1rem; color: #666;">
     <p>© 2025 EVALUE 充電嘉年華 🌱</p>
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
-    <p style="font-size: 0.8rem; color: #999;">資料最後更新：{last_update_time}</p>
+    <p style="font-size: 0.8rem; color: #999;">資料最後更新：{update_time}</p>
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
-
-# 更新 session state
-st.session_state.last_hash = current_hash
