@@ -88,7 +88,7 @@ css_styles = """
 st.markdown(css_styles, unsafe_allow_html=True)
 
 # ==================== 左上角 Logo ====================
-logo_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/logo.png"
+logo_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/logo.png"
 facebook_url = "https://www.facebook.com/evaluetw/?locale=zh_TW"
 st.markdown(f"""
 <div class="top-left-logo">
@@ -190,7 +190,7 @@ st.markdown("""
 
 # ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
-map_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/map.png"
+map_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png"
 st.markdown(f"""
 <div style="text-align: center;">
     <img src="{map_url}" alt="活動地圖" style="max-width: 100%; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
@@ -205,4 +205,3 @@ st.markdown("""
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
 </div>
 """, unsafe_allow_html=True)
-
