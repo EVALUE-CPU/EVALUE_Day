@@ -376,7 +376,6 @@ with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
         # 使用 st.table() 顯示完整表格，無滾輪和高度限制
         st.table(df)
-        st.info(f"共有 {len(df)} 位得獎者")
     else:
         st.warning("目前尚無得獎名單資料")
 
@@ -415,3 +414,4 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
