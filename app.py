@@ -112,7 +112,7 @@ st.markdown("""
 def load_lottery_data():
     """從 GitHub 載入抽獎名單資料，使用檔案內容 hash 判斷更新"""
     try:
-        github_url = f"https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv?t={int(time.time())}"
+        github_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv?t={int(time.time())}"
         response = requests.get(github_url)
         response.encoding = 'utf-8'
         csv_text = response.text.strip()
@@ -205,3 +205,4 @@ st.markdown("""
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
 </div>
 """, unsafe_allow_html=True)
+
