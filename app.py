@@ -107,29 +107,22 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==================== 抽獎名單載入（只在 GitHub 檔案改變時更新） ====================
+# ==================== 抽獎名單載入 ====================
 @st.cache_data
-def load_lottery_data(last_hash=None):
-    """從 GitHub 載入抽獎名單資料，只有當檔案內容改變時才更新"""
+def load_lottery_data():
+    """從 GitHub 載入抽獎名單資料，使用檔案內容 hash 判斷更新"""
     try:
         github_url = f"https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv?t={int(time.time())}"
         response = requests.get(github_url)
         response.encoding = 'utf-8'
         csv_text = response.text.strip()
-
-        new_hash = hashlib.md5(csv_text.encode('utf-8')).hexdigest()
-
-        if last_hash and new_hash != last_hash:
-            st.cache_data.clear()
-            st.experimental_rerun()
-
+        file_hash = hashlib.md5(csv_text.encode('utf-8')).hexdigest()
         df = pd.read_csv(StringIO(csv_text))
         if "獎項" in df.columns and "序號" in df.columns:
-            return df[["獎項", "序號"]], new_hash
+            return df[["獎項", "序號"]], file_hash
         else:
             st.error("❌ 檔案格式錯誤：需包含「獎項」與「序號」欄位")
-            return pd.DataFrame(columns=["獎項", "序號"]), new_hash
-
+            return pd.DataFrame(columns=["獎項", "序號"]), file_hash
     except Exception as e:
         st.error(f"❌ 載入資料失敗：{str(e)}")
         return pd.DataFrame(columns=["獎項", "序號"]), None
@@ -175,7 +168,6 @@ elif search_button and not search_number:
 
 # ==================== 完整名單 ====================
 st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
-
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
         table_height = max(200, min(len(df) * 35 + 50, 600))
