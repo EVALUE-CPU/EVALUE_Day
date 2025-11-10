@@ -3,9 +3,6 @@ import pandas as pd
 import re
 import time
 import random
-import urllib.request
-import urllib.error
-from datetime import datetime
 
 # 設定頁面配置
 st.set_page_config(
@@ -248,63 +245,6 @@ css_styles = """
 
 st.markdown(css_styles, unsafe_allow_html=True)
 
-# ==================== 核心資料載入函數====================
-def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料 - 確保獲取最新版本"""
-    
-    # 簡單的防快取參數
-    current_timestamp = int(time.time())
-    random_id = random.randint(1000, 9999)
-    
-    try:
-        # 防快取 URL
-        base_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
-        github_url = f"{base_url}?t={current_timestamp}&r={random_id}"
-        
-        # 防快取標頭
-        headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'User-Agent': f'StreamlitApp/{current_timestamp}'
-        }
-        
-        # 建立請求
-        request = urllib.request.Request(github_url, headers=headers)
-        
-        # 載入資料
-        with urllib.request.urlopen(request, timeout=10) as response:
-            df = pd.read_csv(response, encoding='utf-8')
-        
-        # 驗證必要欄位
-        required_columns = ["獎項", "序號"]
-        if all(col in df.columns for col in required_columns):
-            # 資料清理
-            df = df[required_columns].copy()
-            df = df.dropna(subset=required_columns)
-            df['序號'] = df['序號'].astype(str).str.strip()
-            df['獎項'] = df['獎項'].astype(str).str.strip()
-            df = df[df['序號'] != '']
-            df = df[df['獎項'] != '']
-            return df
-        else:
-            st.error(f"CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
-            return pd.DataFrame(columns=required_columns)
-        
-    except Exception as e:
-        st.error(f"載入資料失敗：請稍後再試")
-        return pd.DataFrame(columns=["獎項", "序號"])
-
-# ==================== 輸入驗證函數 ====================
-def is_valid_number(value):
-    """檢查輸入值是否只包含數字"""
-    if not value:
-        return False
-    return bool(re.match("^[0-9]+$", value.strip()))
-
-def normalize_number(value):
-    """標準化數字輸入"""
-    return value.strip().lstrip('0') or '0'
-
 # ==================== 左上角 Logo ====================
 logo_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/logo.png"
 facebook_url = "https://www.facebook.com/evaluetw/?locale=zh_TW"
@@ -329,6 +269,60 @@ st.markdown(header_html, unsafe_allow_html=True)
 # ==================== 抽獎查詢 ====================
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
 
+# 載入得獎名單 - 每次執行都重新載入
+def load_lottery_data():
+    """從 GitHub 載入抽獎名單資料 - 強制重新載入"""
+    import urllib.request
+    
+    # 生成唯一的查詢參數避免快取
+    current_time = int(time.time())
+    random_id = random.randint(100000, 999999)
+    
+    try:
+        # 使用多重防快取策略的 URL
+        base_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
+        cache_buster = f"?_t={current_time}&_r={random_id}&_nocache=true"
+        github_url = base_url + cache_buster
+        
+        # 強制無快取的 HTTP 標頭
+        headers = {
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0, private',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
+            'User-Agent': f'StreamlitRefresh/{current_time}'
+        }
+        
+        # 建立請求並載入
+        request = urllib.request.Request(github_url, headers=headers)
+        
+        with urllib.request.urlopen(request) as response:
+            # 直接從回應載入 pandas DataFrame
+            df = pd.read_csv(response, encoding='utf-8')
+        
+        # 驗證必要欄位
+        required_columns = ["獎項", "序號"]
+        if all(col in df.columns for col in required_columns):
+            return df[required_columns].copy()  # 使用 copy() 確保是新的 DataFrame
+        else:
+            st.error(f"CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
+            return pd.DataFrame(columns=required_columns)
+            
+    except urllib.error.HTTPError as http_err:
+        st.error(f"HTTP 錯誤：{http_err.code} - {http_err.reason}")
+        return pd.DataFrame(columns=["獎項", "序號"])
+    except urllib.error.URLError as url_err:
+        st.error(f"網路連線錯誤：{url_err.reason}")
+        return pd.DataFrame(columns=["獎項", "序號"])
+    except Exception as e:
+        st.error(f"載入資料失敗：{str(e)}")
+        return pd.DataFrame(columns=["獎項", "序號"])
+
+# 驗證輸入只包含數字的函數
+def is_valid_number(value):
+    """檢查輸入值是否只包含數字"""
+    return bool(re.match("^[0-9]+$", value.strip()))
+
 # 搜尋功能
 col1, col2 = st.columns([3, 1])
 with col1:
@@ -346,7 +340,7 @@ with col1:
 with col2:
     search_button = st.button("查詢", type="primary", use_container_width=True, key="search_btn")
 
-# 載入資料
+# 每次都重新載入資料（無快取）
 df = load_lottery_data()
 
 # 搜尋結果
@@ -355,28 +349,20 @@ if search_button and search_number:
     if not is_valid_number(search_number):
         st.error("❌ 序號格式錯誤！請只輸入數字")
     else:
-        # 標準化搜尋號碼
-        normalized_search = normalize_number(search_number)
-        
-        # 進行搜尋 - 同時搜尋原始輸入和標準化輸入
-        result = df[
-            (df["序號"].astype(str) == search_number.strip()) |
-            (df["序號"].astype(str) == normalized_search)
-        ]
-        
+        # 進行搜尋
+        result = df[df["序號"].astype(str) == search_number.strip()]
         if not result.empty:
             st.success(f"🎉 恭喜！您中獎了！")
             
             # 顯示中獎資訊
-            winner_info = result.iloc[0]
             st.markdown(f"""
             <div class="highlight-box">
-                <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">🏆 中獎資訊</h2>
+                <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
                 <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
-                    🎫 抽獎序號：{winner_info['序號']}
+                    抽獎序號：{result.iloc[0]['序號']}
                 </p>
                 <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
-                    🎁 獎項：{winner_info['獎項']}
+                    獎項：{result.iloc[0]['獎項']}
                 </p>
                 <div style="height: 2px; background: rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
                 <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
@@ -389,57 +375,17 @@ if search_button and search_number:
         else:
             st.error("😢 很抱歉，此序號未中獎或序號不存在")
 elif search_button and not search_number:
-    st.warning("⚠️ 請輸入抽獎序號")
+    st.warning("請輸入抽獎序號")
 
 # ==================== 完整抽獎名單 ====================
 st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
 
 # 顯示完整名單
-with st.expander("📋 點擊展開完整得獎名單", expanded=False):
+with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 依獎項分組顯示
-        st.markdown("### 📊 中獎統計")
-        
-        # 統計各獎項數量
-        prize_counts = df['獎項'].value_counts().sort_index()
-        for prize, count in prize_counts.items():
-            st.markdown(f"**{prize}**: {count} 名")
-        
-        st.markdown("---")
-        st.markdown("### 📋 完整名單")
-        
-        # 顯示完整表格
-        # 重新排序：先按獎項，再按序號
-        df_display = df.copy()
-        try:
-            # 嘗試將序號轉為數字排序
-            df_display['序號_數字'] = pd.to_numeric(df_display['序號'], errors='coerce')
-            df_display = df_display.sort_values(['獎項', '序號_數字'], na_position='last')
-            df_display = df_display[['獎項', '序號']]  # 只顯示原始欄位
-        except:
-            # 如果轉換失敗，使用字串排序
-            df_display = df_display.sort_values(['獎項', '序號'])
-        
-        # 使用 Streamlit 的原生表格顯示
-        st.dataframe(
-            df_display,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "獎項": st.column_config.TextColumn("🏆 獎項", width="medium"),
-                "序號": st.column_config.TextColumn("🎫 抽獎序號", width="medium")
-            }
-        )
-        
-        # 下載功能
-        csv_data = df_display.to_csv(index=False, encoding='utf-8-sig')
-        st.download_button(
-            label="📥 下載完整名單 (CSV)",
-            data=csv_data,
-            file_name=f"得獎名單_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
+        # 使用 df.to_html() 並設定 index=False 來隱藏左邊的流水號，維持HTML格式
+        html_table = df.to_html(index=False, escape=False, classes='dataframe')
+        st.markdown(html_table, unsafe_allow_html=True)
     else:
         st.warning("目前尚無得獎名單資料")
 
@@ -473,6 +419,7 @@ footer_html = """
 <div style="text-align: center; padding: 2rem 1rem; color: #666;">
     <p>© 2025 EVALUE 充電嘉年華 🌱</p>
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
+    </p>
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
