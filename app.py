@@ -338,8 +338,7 @@ if search_button and search_number:
                     <div style="height: 2px; background: rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
                     <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
                     <p style="font-size: 1.1rem; line-height: 1.8; color: white; margin: 0;">
-                        ✓ 請攜帶抽獎券存根及身分證件至服務台領獎<br><br>
-                        ✓ 領獎時間：活動當日 10:00 - 17:00<br><br>
+                        ✓ 請攜帶抽獎存根及身分證件至服務台領獎<br><br>
                         ✓ 逾時未領取視同放棄得獎資格
                     </p>
                 </div>
@@ -388,8 +387,7 @@ st.markdown("""
 <div class="info-box">
     <strong>📌 領獎須知：</strong>
     <ul style="margin-top: 0.5rem;">
-        <li>請攜帶抽獎券存根及身分證件至服務台領獎</li>
-        <li>領獎時間：活動當日 10:00 - 17:00</li>
+        <li>請攜帶抽獎存根及身分證件至服務台領獎</li>
         <li>逾時未領取視同放棄得獎資格</li>
     </ul>
 </div>
@@ -418,3 +416,4 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
