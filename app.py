@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import re
+import time
+import random
 
 # 設定頁面配置
 st.set_page_config(
@@ -267,51 +269,54 @@ st.markdown(header_html, unsafe_allow_html=True)
 # ==================== 抽獎查詢 ====================
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
 
-# 載入得獎名單
-@st.cache_data(ttl=0)  # 不使用快取，每次都重新載入
+# 載入得獎名單 - 每次執行都重新載入
 def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料"""
-    import time
+    """從 GitHub 載入抽獎名單資料 - 強制重新載入"""
     import urllib.request
     
+    # 生成唯一的查詢參數避免快取
+    current_time = int(time.time())
+    random_id = random.randint(100000, 999999)
+    
     try:
-        # GitHub Raw URL，加入時間戳記避免瀏覽器快取
-        timestamp = int(time.time())
-        github_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv?t={timestamp}"
+        # 使用多重防快取策略的 URL
+        base_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
+        cache_buster = f"?_t={current_time}&_r={random_id}&_nocache=true"
+        github_url = base_url + cache_buster
         
-        # 設定請求標頭避免快取
+        # 強制無快取的 HTTP 標頭
         headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0, private',
             'Pragma': 'no-cache',
-            'Expires': '0'
+            'Expires': '0',
+            'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
+            'User-Agent': f'StreamlitRefresh/{current_time}'
         }
         
-        # 讀取 CSV 檔案，使用 urllib 處理標頭
-        req = urllib.request.Request(github_url, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        # 建立請求並載入
+        request = urllib.request.Request(github_url, headers=headers)
+        
+        with urllib.request.urlopen(request) as response:
+            # 直接從回應載入 pandas DataFrame
             df = pd.read_csv(response, encoding='utf-8')
         
-        # 確保欄位名稱正確
-        if "獎項" in df.columns and "序號" in df.columns:
-            return df[["獎項", "序號"]]
+        # 驗證必要欄位
+        required_columns = ["獎項", "序號"]
+        if all(col in df.columns for col in required_columns):
+            return df[required_columns].copy()  # 使用 copy() 確保是新的 DataFrame
         else:
-            st.error("檔案格式錯誤：需包含「獎項」和「序號」欄位")
-            return pd.DataFrame(columns=["獎項", "序號"])
+            st.error(f"CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
+            return pd.DataFrame(columns=required_columns)
             
+    except urllib.error.HTTPError as http_err:
+        st.error(f"HTTP 錯誤：{http_err.code} - {http_err.reason}")
+        return pd.DataFrame(columns=["獎項", "序號"])
+    except urllib.error.URLError as url_err:
+        st.error(f"網路連線錯誤：{url_err.reason}")
+        return pd.DataFrame(columns=["獎項", "序號"])
     except Exception as e:
-        # 如果主要方法失敗，嘗試備用方法
-        try:
-            github_url_backup = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
-            df = pd.read_csv(github_url_backup, encoding='utf-8')
-            
-            if "獎項" in df.columns and "序號" in df.columns:
-                return df[["獎項", "序號"]]
-            else:
-                st.error("檔案格式錯誤：需包含「獎項」和「序號」欄位")
-                return pd.DataFrame(columns=["獎項", "序號"])
-        except:
-            st.error(f"載入資料失敗：{str(e)}")
-            return pd.DataFrame(columns=["獎項", "序號"])
+        st.error(f"載入資料失敗：{str(e)}")
+        return pd.DataFrame(columns=["獎項", "序號"])
 
 # 驗證輸入只包含數字的函數
 def is_valid_number(value):
@@ -335,7 +340,7 @@ with col1:
 with col2:
     search_button = st.button("查詢", type="primary", use_container_width=True, key="search_btn")
 
-# 載入資料
+# 每次都重新載入資料（無快取）
 df = load_lottery_data()
 
 # 搜尋結果
@@ -349,47 +354,24 @@ if search_button and search_number:
         if not result.empty:
             st.success(f"🎉 恭喜！您中獎了！")
             
-            # 先嘗試簡化的HTML版本
-            try:
-                st.markdown(f"""
-                <div class="highlight-box">
-                    <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
-                    <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
-                        抽獎序號：{result.iloc[0]['序號']}
-                    </p>
-                    <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
-                        獎項：{result.iloc[0]['獎項']}
-                    </p>
-                    <div style="height: 2px; background: rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
-                    <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
-                    <p style="font-size: 1.1rem; line-height: 1.8; color: white; margin: 0;">
-                        ✓ 請攜帶抽獎存根及身分證件至服務台領獎<br><br>
-                        ✓ 逾時未領取視同放棄得獎資格
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-            except:
-                # 如果HTML還是有問題，使用純Streamlit的替代方案
-                # 創建一個視覺上相似的框
-                st.markdown("""
-                <div style="background: linear-gradient(45deg, rgba(253, 177, 67, 0.9), rgba(243, 114, 44, 0.9)); 
-                            color: white; padding: 2rem; border-radius: 12px; margin: 1rem 0;">
-                """, unsafe_allow_html=True)
-                
-                st.markdown("## 🎁 中獎資訊")
-                st.markdown(f"### 抽獎序號：{result.iloc[0]['序號']}")
-                st.markdown(f"### 獎項：{result.iloc[0]['獎項']}")
-                st.markdown("---")
-                st.markdown("## 📌 領獎須知：")
-                st.markdown("""
-                ✓ **請攜帶抽獎券存根及身分證件至服務台領獎**
-                
-                ✓ **領獎時間：活動當日 10:00 - 17:00**
-                
-                ✓ **逾時未領取視同放棄得獎資格**
-                """)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
+            # 顯示中獎資訊
+            st.markdown(f"""
+            <div class="highlight-box">
+                <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
+                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
+                    抽獎序號：{result.iloc[0]['序號']}
+                </p>
+                <p style="font-size: 1.4rem; font-weight: bold; margin: 0.8rem 0; color: white;">
+                    獎項：{result.iloc[0]['獎項']}
+                </p>
+                <div style="height: 2px; background: rgba(255,255,255,0.3); margin: 1.5rem 0;"></div>
+                <h3 style="color: white; font-size: 1.3rem; margin-bottom: 0.8rem;">📌 領獎須知：</h3>
+                <p style="font-size: 1.1rem; line-height: 1.8; color: white; margin: 0;">
+                    ✓ 請攜帶抽獎存根及身分證件至服務台領獎<br><br>
+                    ✓ 逾時未領取視同放棄得獎資格
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
         else:
             st.error("😢 很抱歉，此序號未中獎或序號不存在")
 elif search_button and not search_number:
