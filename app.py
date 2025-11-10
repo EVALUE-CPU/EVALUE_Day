@@ -132,21 +132,24 @@ css_styles = """
     }
     
     /* 表格樣式 */
-    .dataframe {
+    .dataframe, table {
         border: 2px solid rgba(253, 177, 67, 0.6) !important;
         border-radius: 10px !important;
         overflow: hidden !important;
         background: rgba(255, 255, 255, 0.9) !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
     }
     
-    .dataframe th {
+    .dataframe th, table th {
         background: linear-gradient(45deg, rgba(67, 170, 139, 0.9), rgba(39, 125, 161, 0.9)) !important;
         color: white !important;
         font-weight: 600 !important;
         padding: 10px !important;
+        text-align: left !important;
     }
     
-    .dataframe td {
+    .dataframe td, table td {
         border-bottom: 1px solid rgba(253, 177, 67, 0.3) !important;
         padding: 8px !important;
         background: rgba(255, 255, 255, 0.8) !important;
@@ -374,8 +377,9 @@ st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2><
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 使用 st.dataframe() 並設定 hide_index=True 來隱藏左邊的流水號
-        st.dataframe(df, hide_index=True, use_container_width=True)
+        # 使用 df.to_html() 並設定 index=False 來隱藏左邊的流水號，維持HTML格式
+        html_table = df.to_html(index=False, escape=False, classes='dataframe')
+        st.markdown(html_table, unsafe_allow_html=True)
     else:
         st.warning("目前尚無得獎名單資料")
 
