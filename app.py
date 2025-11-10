@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import re
+import hashlib
+import requests
+from io import StringIO
 
 # 設定頁面配置
 st.set_page_config(
@@ -106,24 +109,37 @@ st.markdown("""
 # ==================== 抽獎查詢 ====================
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
 
-# ✅ 只有當 GitHub 上的 winners.csv 內容改變時才重新載入
+# ✅ 自動偵測 GitHub winners.csv 是否更新
 @st.cache_data
-def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料（上傳新檔時自動更新）"""
+def load_lottery_data(file_hash=None):
+    """從 GitHub 載入抽獎名單資料（只有上傳新檔時才更新）"""
     try:
         github_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv"
-        df = pd.read_csv(github_url, encoding='utf-8')
-        if "獎項" in df.columns and "序號" in df.columns:
-            return df[["獎項", "序號"]]
-        else:
-            st.error("檔案格式錯誤：需包含「獎項」和「序號」欄位")
-            return pd.DataFrame(columns=["獎項", "序號"])
-    except Exception as e:
-        st.error(f"載入資料失敗：{str(e)}")
-        return pd.DataFrame(columns=["獎項", "序號"])
+        response = requests.get(github_url)
+        response.encoding = 'utf-8'
+        csv_text = response.text
 
-# 載入最新名單（自動偵測檔案內容是否變動）
-df = load_lottery_data()
+        # 計算檔案內容 hash
+        current_hash = hashlib.md5(csv_text.encode('utf-8')).hexdigest()
+
+        # 若 hash 改變，清除快取並重新載入
+        if file_hash and file_hash != current_hash:
+            st.cache_data.clear()
+            st.experimental_rerun()
+
+        df = pd.read_csv(StringIO(csv_text))
+        if "獎項" in df.columns and "序號" in df.columns:
+            return df[["獎項", "序號"]], current_hash
+        else:
+            st.error("❌ 檔案格式錯誤：需包含「獎項」與「序號」欄位")
+            return pd.DataFrame(columns=["獎項", "序號"]), current_hash
+
+    except Exception as e:
+        st.error(f"❌ 載入資料失敗：{str(e)}")
+        return pd.DataFrame(columns=["獎項", "序號"]), None
+
+# 載入資料
+df, file_hash = load_lottery_data()
 
 # 驗證輸入
 def is_valid_number(value):
