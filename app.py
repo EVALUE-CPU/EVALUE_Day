@@ -152,26 +152,6 @@ css_styles = """
         background: rgba(255, 255, 255, 0.8) !important;
     }
     
-    /* Expander 內容樣式 - 確保沒有高度限制 */
-    .streamlit-expanderContent {
-        max-height: none !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-    
-    .streamlit-expanderContent > div {
-        max-height: none !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-    
-    /* 確保表格容器沒有高度限制 */
-    div[data-testid="stExpander"] > div > div {
-        max-height: none !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-    
     /* 成功/錯誤訊息 */
     .stSuccess {
         background: linear-gradient(45deg, rgba(67, 170, 139, 0.9), rgba(39, 125, 161, 0.9)) !important;
@@ -394,34 +374,8 @@ st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2><
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 創建完全無限制的HTML表格
-        html_table = """
-        <div style="width: 100%; overflow: visible; max-height: none !important; height: auto !important;">
-            <table style="width: 100%; border-collapse: collapse; background: rgba(255, 255, 255, 0.9); border-radius: 10px; overflow: visible; border: 2px solid rgba(253, 177, 67, 0.6); height: auto !important; max-height: none !important;">
-                <thead>
-                    <tr style="background: linear-gradient(45deg, rgba(67, 170, 139, 0.9), rgba(39, 125, 161, 0.9));">
-                        <th style="color: white; font-weight: 600; padding: 12px; text-align: center; border-bottom: 1px solid rgba(253, 177, 67, 0.3);">獎項</th>
-                        <th style="color: white; font-weight: 600; padding: 12px; text-align: center; border-bottom: 1px solid rgba(253, 177, 67, 0.3);">序號</th>
-                    </tr>
-                </thead>
-                <tbody style="height: auto !important; max-height: none !important; overflow: visible !important;">
-        """
-        
-        for _, row in df.iterrows():
-            html_table += f"""
-                    <tr style="border-bottom: 1px solid rgba(253, 177, 67, 0.3);">
-                        <td style="padding: 10px; text-align: center; background: rgba(255, 255, 255, 0.8);">{row['獎項']}</td>
-                        <td style="padding: 10px; text-align: center; background: rgba(255, 255, 255, 0.8);">{row['序號']}</td>
-                    </tr>
-            """
-        
-        html_table += """
-                </tbody>
-            </table>
-        </div>
-        """
-        
-        st.markdown(html_table, unsafe_allow_html=True)
+        # 使用 st.table() 顯示完整表格，無滾輪和高度限制
+        st.table(df)
         st.info(f"共有 {len(df)} 位得獎者")
     else:
         st.warning("目前尚無得獎名單資料")
