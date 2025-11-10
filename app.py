@@ -374,12 +374,8 @@ st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2><
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 顯示完整表格，不設置高度限制
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True
-        )
+        # 使用 st.table() 顯示完整表格，無滾輪和高度限制
+        st.table(df)
         st.info(f"共有 {len(df)} 位得獎者")
     else:
         st.warning("目前尚無得獎名單資料")
