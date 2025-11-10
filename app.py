@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 import re
-import hashlib
 import requests
+import hashlib
+import time
 from io import StringIO
 
-# 設定頁面配置
+# ==================== 頁面設定 ====================
 st.set_page_config(
     page_title="2025 EVALUE Day 嘉年華",
     page_icon="🎪",
@@ -13,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== 自定義CSS樣式 ====================
+# ==================== CSS 樣式 ====================
 css_styles = """
 <style>
     section[data-testid="stSidebar"] { display: none; }
@@ -106,42 +107,38 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==================== 抽獎查詢 ====================
-st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
-
-# ✅ 自動偵測 GitHub winners.csv 是否更新
+# ==================== 抽獎名單載入（只在 GitHub 檔案改變時更新） ====================
 @st.cache_data
-def load_lottery_data(file_hash=None):
-    """從 GitHub 載入抽獎名單資料（只有上傳新檔時才更新）"""
+def load_lottery_data(last_hash=None):
+    """從 GitHub 載入抽獎名單資料，只有當檔案內容改變時才更新"""
     try:
-        github_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv"
+        github_url = f"https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv?t={int(time.time())}"
         response = requests.get(github_url)
         response.encoding = 'utf-8'
-        csv_text = response.text
+        csv_text = response.text.strip()
 
-        # 計算檔案內容 hash
-        current_hash = hashlib.md5(csv_text.encode('utf-8')).hexdigest()
+        new_hash = hashlib.md5(csv_text.encode('utf-8')).hexdigest()
 
-        # 若 hash 改變，清除快取並重新載入
-        if file_hash and file_hash != current_hash:
+        if last_hash and new_hash != last_hash:
             st.cache_data.clear()
             st.experimental_rerun()
 
         df = pd.read_csv(StringIO(csv_text))
         if "獎項" in df.columns and "序號" in df.columns:
-            return df[["獎項", "序號"]], current_hash
+            return df[["獎項", "序號"]], new_hash
         else:
             st.error("❌ 檔案格式錯誤：需包含「獎項」與「序號」欄位")
-            return pd.DataFrame(columns=["獎項", "序號"]), current_hash
+            return pd.DataFrame(columns=["獎項", "序號"]), new_hash
 
     except Exception as e:
         st.error(f"❌ 載入資料失敗：{str(e)}")
         return pd.DataFrame(columns=["獎項", "序號"]), None
 
-# 載入資料
 df, file_hash = load_lottery_data()
 
-# 驗證輸入
+# ==================== 查詢功能 ====================
+st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
+
 def is_valid_number(value):
     return bool(re.match("^[0-9]+$", value.strip()))
 
@@ -153,7 +150,6 @@ with col1:
 with col2:
     search_button = st.button("查詢", type="primary", use_container_width=True, key="search_btn")
 
-# 搜尋結果
 if search_button and search_number:
     if not is_valid_number(search_number):
         st.error("❌ 序號格式錯誤！請只輸入數字")
