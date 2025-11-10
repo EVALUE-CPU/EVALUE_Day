@@ -241,7 +241,7 @@ css_styles = """
 st.markdown(css_styles, unsafe_allow_html=True)
 
 # ==================== 左上角 Logo ====================
-logo_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/logo.png"
+logo_url = "logo.png"  # GitHub 中的 logo.png
 facebook_url = "https://www.facebook.com/evaluetw/?locale=zh_TW"
 st.markdown(f"""
 <div class="top-left-logo">
@@ -268,8 +268,8 @@ st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>'
 def load_lottery_data():
     """從 GitHub 載入抽獎名單資料"""
     try:
-        # GitHub Raw URL
-        github_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/winners.csv"
+        # GitHub 中的 winners.csv
+        github_url = "winners.csv"
         
         # 讀取 CSV 檔案
         df = pd.read_csv(github_url, encoding='utf-8')
@@ -400,8 +400,8 @@ st.markdown("""
 
 # ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
-# 活動地圖圖片 URL
-map_url = "https://raw.githubusercontent.com/EVALUE-Charging/Test/main/map.png"
+# 活動地圖圖片 - GitHub 中的 map.png
+map_url = "map.png"
 
 st.markdown(f"""
 <div style="text-align: center; margin: 0.1rem 0;">
