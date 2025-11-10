@@ -268,14 +268,28 @@ st.markdown(header_html, unsafe_allow_html=True)
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
 
 # 載入得獎名單
+@st.cache_data(ttl=0)  # 不使用快取，每次都重新載入
 def load_lottery_data():
     """從 GitHub 載入抽獎名單資料"""
+    import time
+    import urllib.request
+    
     try:
-        # GitHub Raw URL
-        github_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
+        # GitHub Raw URL，加入時間戳記避免瀏覽器快取
+        timestamp = int(time.time())
+        github_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv?t={timestamp}"
         
-        # 讀取 CSV 檔案
-        df = pd.read_csv(github_url, encoding='utf-8')
+        # 設定請求標頭避免快取
+        headers = {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
+        
+        # 讀取 CSV 檔案，使用 urllib 處理標頭
+        req = urllib.request.Request(github_url, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            df = pd.read_csv(response, encoding='utf-8')
         
         # 確保欄位名稱正確
         if "獎項" in df.columns and "序號" in df.columns:
@@ -285,8 +299,19 @@ def load_lottery_data():
             return pd.DataFrame(columns=["獎項", "序號"])
             
     except Exception as e:
-        st.error(f"載入資料失敗：{str(e)}")
-        return pd.DataFrame(columns=["獎項", "序號"])
+        # 如果主要方法失敗，嘗試備用方法
+        try:
+            github_url_backup = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
+            df = pd.read_csv(github_url_backup, encoding='utf-8')
+            
+            if "獎項" in df.columns and "序號" in df.columns:
+                return df[["獎項", "序號"]]
+            else:
+                st.error("檔案格式錯誤：需包含「獎項」和「序號」欄位")
+                return pd.DataFrame(columns=["獎項", "序號"])
+        except:
+            st.error(f"載入資料失敗：{str(e)}")
+            return pd.DataFrame(columns=["獎項", "序號"])
 
 # 驗證輸入只包含數字的函數
 def is_valid_number(value):
@@ -416,4 +441,3 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
-
