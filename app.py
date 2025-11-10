@@ -88,7 +88,7 @@ css_styles = """
 st.markdown(css_styles, unsafe_allow_html=True)
 
 # ==================== 左上角 Logo ====================
-logo_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/logo.png"
+logo_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/logo.png"
 facebook_url = "https://www.facebook.com/evaluetw/?locale=zh_TW"
 st.markdown(f"""
 <div class="top-left-logo">
@@ -205,5 +205,6 @@ st.markdown("""
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
 </div>
 """, unsafe_allow_html=True)
+
 
 
