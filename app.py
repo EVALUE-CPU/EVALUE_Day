@@ -374,13 +374,11 @@ st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2><
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 計算適當的高度，每行約35px，最少200px
-        table_height = max(200, min(len(df) * 35 + 50, 600))
+        # 顯示完整表格，不設置高度限制
         st.dataframe(
             df,
             use_container_width=True,
-            hide_index=True,
-            height=table_height
+            hide_index=True
         )
         st.info(f"共有 {len(df)} 位得獎者")
     else:
