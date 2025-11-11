@@ -280,7 +280,7 @@ def load_lottery_data():
     
     try:
         # 使用多重防快取策略的 URL
-        base_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
+        base_url = "https://raw.githack.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
         cache_buster = f"?_t={current_time}&_r={random_id}&_nocache=true"
         github_url = base_url + cache_buster
         
@@ -423,3 +423,4 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
