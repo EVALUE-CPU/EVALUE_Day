@@ -1,10 +1,6 @@
 import streamlit as st
 import pandas as pd
 import re
-import time
-import random
-import hashlib
-from datetime import datetime
 
 # 設定頁面配置
 st.set_page_config(
@@ -284,111 +280,29 @@ st.markdown(header_html, unsafe_allow_html=True)
 
 # ==================== 改進的抽獎資料載入函數 ====================
 def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料 - 強化防快取版本"""
-    import urllib.request
-    import ssl
-    
-    # 生成超強防快取參數
-    current_time = int(time.time())
-    random_id = random.randint(100000, 999999)
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    hash_value = hashlib.md5(f"{current_time}{random_id}".encode()).hexdigest()[:8]
-    
+    """從 GitHub 原始檔載入抽獎名單資料"""
     try:
-        # 嘗試多個 URL 來源，增加成功率
-        urls_to_try = [
-            # 直接從 GitHub Raw (最新)
-            f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv?_t={current_time}&_r={random_id}&_ts={timestamp}&_h={hash_value}&nocache=true",
-            # GitHub API 方式
-            f"https://api.github.com/repos/EVALUE-CPU/EVALUE_Day/contents/winners.csv?_t={current_time}&_r={random_id}",
-            # 備用 CDN
-            f"https://cdn.jsdelivr.net/gh/EVALUE-CPU/EVALUE_Day@main/winners.csv?_t={current_time}&_r={random_id}&_ts={timestamp}&_purge=true"
-        ]
+        # GitHub 原始檔 URL
+        github_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
         
-        # 超強防快取 HTTP 標頭
-        headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0, private, proxy-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
-            'If-None-Match': '*',
-            'User-Agent': f'StreamlitRefresh/{current_time}_{random_id}',
-            'Accept': 'text/csv,text/plain,*/*',
-            'Accept-Encoding': 'identity',  # 防止壓縮快取
-            'Connection': 'close'  # 防止連線重用
-        }
+        # 直接用 pandas 讀取
+        df = pd.read_csv(github_url, encoding='utf-8')
         
-        # 嘗試每個 URL
-        for i, url in enumerate(urls_to_try):
-            try:
-                st.write(f"🔄 正在載入最新資料... (嘗試 {i+1}/{len(urls_to_try)})")
-                
-                # 建立 SSL context，允許所有憑證
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-                
-                request = urllib.request.Request(url, headers=headers)
-                
-                with urllib.request.urlopen(request, context=ssl_context, timeout=10) as response:
-                    # 檢查回應標頭
-                    content_type = response.getheader('Content-Type', '')
-                    
-                    if 'github.com/repos' in url and '/contents/' in url:
-                        # GitHub API 回應處理
-                        import json
-                        import base64
-                        api_response = json.loads(response.read().decode('utf-8'))
-                        if 'content' in api_response:
-                            csv_content = base64.b64decode(api_response['content']).decode('utf-8')
-                            df = pd.read_csv(pd.io.common.StringIO(csv_content))
-                        else:
-                            continue
-                    else:
-                        # 直接 CSV 處理
-                        df = pd.read_csv(response, encoding='utf-8')
-                
-                # 驗證資料
-                required_columns = ["獎項", "序號"]
-                if all(col in df.columns for col in required_columns):
-                    st.success(f"✅ 資料載入成功！(來源: 方法 {i+1}, 時間: {datetime.now().strftime('%H:%M:%S')})")
-                    return df[required_columns].copy()
-                else:
-                    st.warning(f"⚠️ 資料格式錯誤，嘗試下一個來源...")
-                    continue
-                    
-            except Exception as url_error:
-                st.warning(f"⚠️ 來源 {i+1} 載入失敗: {str(url_error)}")
-                continue
-        
-        # 所有方法都失敗
-        st.error("❌ 無法載入最新資料，所有來源都失敗")
-        return pd.DataFrame(columns=["獎項", "序號"])
-        
+        # 驗證必要欄位
+        required_columns = ["獎項", "序號"]
+        if all(col in df.columns for col in required_columns):
+            return df[required_columns].copy()
+        else:
+            st.error(f"CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
+            return pd.DataFrame(columns=required_columns)
+            
     except Exception as e:
-        st.error(f"❌ 載入資料時發生未預期錯誤：{str(e)}")
+        st.error(f"載入資料失敗：{str(e)}")
         return pd.DataFrame(columns=["獎項", "序號"])
-
-# 顯示資料更新時間指示器
-current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-st.markdown(f"""
-<div class="refresh-indicator">
-    🕐 資料更新: {current_time_str}
-</div>
-""", unsafe_allow_html=True)
 
 # 驗證輸入只包含數字的函數
 def is_valid_number(value):
-    """檢查輸入值是否只包含數字"""
     return bool(re.match("^[0-9]+$", value.strip()))
-
-# ==================== 抽獎查詢 ====================
-st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
-
-# 強制重新載入按鈕
-col_refresh, col_space = st.columns([1, 3])
-with col_refresh:
-    force_refresh = st.button("🔄 強制更新資料", type="secondary", help="點擊重新載入最新的得獎名單")
 
 # 搜尋功能
 col1, col2 = st.columns([3, 1])
@@ -399,7 +313,6 @@ with col1:
         key="search_input"
     )
     
-    # 即時驗證輸入
     if search_number:
         if not is_valid_number(search_number):
             st.warning("⚠️ 請只輸入數字，不可包含英文字母或特殊符號")
@@ -407,27 +320,18 @@ with col1:
 with col2:
     search_button = st.button("查詢", type="primary", use_container_width=True, key="search_btn")
 
-# 載入資料 (每次查詢或強制更新時都重新載入)
-if search_button or force_refresh or 'df' not in st.session_state:
-    with st.spinner("正在載入最新資料..."):
-        df = load_lottery_data()
-        st.session_state.df = df  # 儲存到 session state
-        st.session_state.last_update = datetime.now().strftime("%H:%M:%S")
-else:
-    df = st.session_state.get('df', pd.DataFrame(columns=["獎項", "序號"]))
+# 每次都重新載入資料（無快取）
+df = load_lottery_data()
 
 # 搜尋結果
 if search_button and search_number:
-    # 驗證輸入格式
     if not is_valid_number(search_number):
         st.error("❌ 序號格式錯誤！請只輸入數字")
     else:
-        # 進行搜尋
         result = df[df["序號"].astype(str) == search_number.strip()]
         if not result.empty:
             st.success(f"🎉 恭喜！您中獎了！")
             
-            # 顯示中獎資訊
             st.markdown(f"""
             <div class="highlight-box">
                 <h2 style="color: white; font-size: 1.8rem; margin-bottom: 1rem;">中獎資訊</h2>
@@ -453,33 +357,12 @@ elif search_button and not search_number:
 # ==================== 完整抽獎名單 ====================
 st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
 
-# 顯示最後更新時間
-if 'last_update' in st.session_state:
-    st.info(f"📅 最後更新時間: {st.session_state.last_update}")
-
-# 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 顯示資料筆數
-        st.write(f"📊 共有 {len(df)} 筆得獎記錄")
-        
-        # 使用 df.to_html() 並設定 index=False 來隱藏左邊的流水號，維持HTML格式
         html_table = df.to_html(index=False, escape=False, classes='dataframe')
         st.markdown(html_table, unsafe_allow_html=True)
     else:
         st.warning("目前尚無得獎名單資料")
-
-# 領獎須知
-st.markdown("""
-<div class="info-box">
-    <strong>📌 領獎須知：</strong>
-    <ul style="margin-top: 0.5rem;">
-        <li>請攜帶抽獎存根及身分證件至服務台領獎</li>
-        <li>逾時未領取視同放棄得獎資格</li>
-    </ul>
-</div>
-""", unsafe_allow_html=True)
-
 # ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
 # 活動地圖圖片 URL
@@ -509,3 +392,4 @@ if st.sidebar.button("🔧 顯示除錯資訊"):
     st.sidebar.write(f"當前時間: {datetime.now()}")
     st.sidebar.write(f"資料筆數: {len(df)}")
     st.sidebar.write(f"Session State Keys: {list(st.session_state.keys())}")
+
