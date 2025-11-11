@@ -418,10 +418,11 @@ st.markdown('<div class="decoration">🎈 🎪 🎯 🎨 🎭 🎪 🎈</div>', 
 footer_html = """
 <div style="text-align: center; padding: 2rem 1rem; color: #666;">
     <p>© 2025 EVALUE 充電嘉年華 🌱</p>
-    <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
+    <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能2</p>
     </p>
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
