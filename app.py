@@ -380,6 +380,16 @@ elif search_button and not search_number:
 # ==================== 完整抽獎名單 ====================
 st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
 
+# 更新按鈕
+col_update1, col_update2, col_update3 = st.columns([2, 1, 2])
+with col_update2:
+    if st.button("🔄 更新名單", type="secondary", use_container_width=True, key="refresh_list_btn"):
+        # 強制重新載入資料
+        df = load_lottery_data()
+        st.success("✅ 名單已更新！")
+        # 使用 st.rerun() 刷新頁面顯示
+        st.rerun()
+
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
@@ -423,5 +433,3 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
-
-
