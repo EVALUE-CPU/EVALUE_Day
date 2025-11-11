@@ -3,6 +3,9 @@ import pandas as pd
 import re
 import time
 import random
+import requests
+from datetime import datetime
+import hashlib
 
 # 設定頁面配置
 st.set_page_config(
@@ -208,6 +211,18 @@ css_styles = """
         opacity: 0.8;
     }
     
+    /* 更新時間顯示 */
+    .update-time {
+        background: rgba(67, 170, 139, 0.1);
+        padding: 0.5rem;
+        border-radius: 8px;
+        text-align: center;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        color: #277DA1;
+        border: 1px solid rgba(67, 170, 139, 0.3);
+    }
+    
     /* 響應式設計 */
     @media (max-width: 768px) {
         .main .block-container {
@@ -245,6 +260,88 @@ css_styles = """
 
 st.markdown(css_styles, unsafe_allow_html=True)
 
+# ==================== 強制刷新機制 ====================
+@st.cache_data(ttl=30, show_spinner=False)  # 30秒過期，確保定期更新
+def load_lottery_data_with_cache_bust():
+    """載入抽獎名單資料 - 強制繞過所有快取機制"""
+    
+    # 多重防快取策略
+    current_timestamp = int(time.time() * 1000)  # 毫秒級時間戳
+    random_id = random.randint(100000, 999999)
+    session_id = hashlib.md5(str(random.random()).encode()).hexdigest()[:8]
+    
+    try:
+        base_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
+        
+        # 完整的防快取 URL 參數
+        cache_busters = [
+            f"_t={current_timestamp}",
+            f"_r={random_id}", 
+            f"_s={session_id}",
+            f"_nocache=true",
+            f"_refresh={datetime.now().strftime('%Y%m%d%H%M%S')}",
+            f"_v={random.randint(1000, 9999)}"
+        ]
+        
+        github_url = f"{base_url}?{'&'.join(cache_busters)}"
+        
+        # 強制無快取的 HTTP 標頭
+        headers = {
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0, private',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
+            'If-None-Match': '*',
+            'User-Agent': f'StreamlitApp/{current_timestamp}',
+            'Accept': 'text/csv,text/plain,*/*',
+            'Accept-Encoding': 'identity',  # 禁用壓縮避免快取
+            'Connection': 'close'
+        }
+        
+        # 使用 requests 代替 urllib 以獲得更好的控制
+        response = requests.get(
+            github_url, 
+            headers=headers, 
+            timeout=15,
+            stream=False,  # 不使用流式下載
+            allow_redirects=True
+        )
+        
+        # 檢查回應狀態
+        response.raise_for_status()
+        
+        # 直接從文本內容建立 DataFrame
+        from io import StringIO
+        df = pd.read_csv(StringIO(response.text), encoding='utf-8')
+        
+        # 驗證必要欄位
+        required_columns = ["獎項", "序號"]
+        if all(col in df.columns for col in required_columns):
+            # 確保序號是字串格式並去除空白
+            df['序號'] = df['序號'].astype(str).str.strip()
+            df['獎項'] = df['獎項'].astype(str).str.strip()
+            
+            return df[required_columns].copy(), datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            st.error(f"❌ CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
+            return pd.DataFrame(columns=required_columns), None
+            
+    except requests.exceptions.Timeout:
+        st.error("⏰ 載入資料超時，請稍後重試")
+        return pd.DataFrame(columns=["獎項", "序號"]), None
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"🌐 網路請求錯誤：{str(req_err)}")
+        return pd.DataFrame(columns=["獎項", "序號"]), None
+    except pd.errors.EmptyDataError:
+        st.error("📄 CSV 檔案是空的")
+        return pd.DataFrame(columns=["獎項", "序號"]), None
+    except pd.errors.ParserError as parse_err:
+        st.error(f"📊 CSV 檔案格式解析錯誤：{str(parse_err)}")
+        return pd.DataFrame(columns=["獎項", "序號"]), None
+    except Exception as e:
+        st.error(f"💥 載入資料失敗：{str(e)}")
+        return pd.DataFrame(columns=["獎項", "序號"]), None
+
 # ==================== 左上角 Logo ====================
 logo_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/logo.png"
 facebook_url = "https://www.facebook.com/evaluetw/?locale=zh_TW"
@@ -269,59 +366,28 @@ st.markdown(header_html, unsafe_allow_html=True)
 # ==================== 抽獎查詢 ====================
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
 
-# 載入得獎名單 - 每次執行都重新載入
-def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料 - 強制重新載入"""
-    import urllib.request
-    
-    # 生成唯一的查詢參數避免快取
-    current_time = int(time.time())
-    random_id = random.randint(100000, 999999)
-    
-    try:
-        # 使用多重防快取策略的 URL
-        base_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/winners.csv"
-        cache_buster = f"?_t={current_time}&_r={random_id}&_nocache=true"
-        github_url = base_url + cache_buster
-        
-        # 強制無快取的 HTTP 標頭
-        headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0, private',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
-            'User-Agent': f'StreamlitRefresh/{current_time}'
-        }
-        
-        # 建立請求並載入
-        request = urllib.request.Request(github_url, headers=headers)
-        
-        with urllib.request.urlopen(request) as response:
-            # 直接從回應載入 pandas DataFrame
-            df = pd.read_csv(response, encoding='utf-8')
-        
-        # 驗證必要欄位
-        required_columns = ["獎項", "序號"]
-        if all(col in df.columns for col in required_columns):
-            return df[required_columns].copy()  # 使用 copy() 確保是新的 DataFrame
-        else:
-            st.error(f"CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
-            return pd.DataFrame(columns=required_columns)
-            
-    except urllib.error.HTTPError as http_err:
-        st.error(f"HTTP 錯誤：{http_err.code} - {http_err.reason}")
-        return pd.DataFrame(columns=["獎項", "序號"])
-    except urllib.error.URLError as url_err:
-        st.error(f"網路連線錯誤：{url_err.reason}")
-        return pd.DataFrame(columns=["獎項", "序號"])
-    except Exception as e:
-        st.error(f"載入資料失敗：{str(e)}")
-        return pd.DataFrame(columns=["獎項", "序號"])
-
 # 驗證輸入只包含數字的函數
 def is_valid_number(value):
     """檢查輸入值是否只包含數字"""
     return bool(re.match("^[0-9]+$", value.strip()))
+
+# 載入資料並顯示更新時間
+df, last_update = load_lottery_data_with_cache_bust()
+
+if last_update:
+    st.markdown(f"""
+    <div class="update-time">
+        📊 資料最後更新時間：{last_update} | 🔄 每30秒自動重新載入最新資料
+    </div>
+    """, unsafe_allow_html=True)
+
+# 手動重新整理按鈕
+col_refresh, col_space = st.columns([1, 4])
+with col_refresh:
+    if st.button("🔄 立即重新載入", key="manual_refresh"):
+        # 清除快取並強制重新載入
+        load_lottery_data_with_cache_bust.clear()
+        st.rerun()
 
 # 搜尋功能
 col1, col2 = st.columns([3, 1])
@@ -340,9 +406,6 @@ with col1:
 with col2:
     search_button = st.button("查詢", type="primary", use_container_width=True, key="search_btn")
 
-# 每次都重新載入資料（無快取）
-df = load_lottery_data()
-
 # 搜尋結果
 if search_button and search_number:
     # 驗證輸入格式
@@ -350,7 +413,9 @@ if search_button and search_number:
         st.error("❌ 序號格式錯誤！請只輸入數字")
     else:
         # 進行搜尋
-        result = df[df["序號"].astype(str) == search_number.strip()]
+        search_num_str = search_number.strip()
+        result = df[df["序號"] == search_num_str]
+        
         if not result.empty:
             st.success(f"🎉 恭喜！您中獎了！")
             
@@ -383,9 +448,18 @@ st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2><
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
     if not df.empty:
-        # 使用 df.to_html() 並設定 index=False 來隱藏左邊的流水號，維持HTML格式
-        html_table = df.to_html(index=False, escape=False, classes='dataframe')
-        st.markdown(html_table, unsafe_allow_html=True)
+        st.markdown(f"**總共 {len(df)} 個得獎名額**")
+        
+        # 使用 st.dataframe 而不是 HTML 表格，確保更好的顯示效果
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "序號": st.column_config.TextColumn("序號", width="medium"),
+                "獎項": st.column_config.TextColumn("獎項", width="large"),
+            }
+        )
     else:
         st.warning("目前尚無得獎名單資料")
 
@@ -396,12 +470,14 @@ st.markdown("""
     <ul style="margin-top: 0.5rem;">
         <li>請攜帶抽獎存根及身分證件至服務台領獎</li>
         <li>逾時未領取視同放棄得獎資格</li>
+        <li>如有疑問請洽詢現場服務人員</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
 
 # ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
+
 # 活動地圖圖片 URL
 map_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png"
 
@@ -419,7 +495,17 @@ footer_html = """
 <div style="text-align: center; padding: 2rem 1rem; color: #666;">
     <p>© 2025 EVALUE 充電嘉年華 🌱</p>
     <p style="font-size: 0.9rem;">主辦單位：EVALUE 華城電能</p>
-    </p>
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
+# ==================== 自動重新整理機制 ====================
+# 每隔一段時間自動重新整理頁面（可選）
+st.markdown("""
+<script>
+// 每5分鐘自動重新整理一次頁面（可根據需要調整）
+setTimeout(function(){
+    window.location.reload();
+}, 300000); // 300000ms = 5分鐘
+</script>
+""", unsafe_allow_html=True)
