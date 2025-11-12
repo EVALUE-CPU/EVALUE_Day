@@ -497,9 +497,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==================== 活動地圖 ====================
+import time
+import streamlit as st
+
+# ==================== 活動地圖 ====================
 st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
-# 活動地圖圖片 URL
-map_url = "https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png"
+
+# 活動地圖圖片 URL (加上時間戳避免快取)
+map_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png?cache_bust={int(time.time())}"
 
 st.markdown(f"""
 <div style="text-align: center; margin: 0.1rem 0;">
@@ -519,6 +524,7 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
 
