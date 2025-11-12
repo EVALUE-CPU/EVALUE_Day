@@ -160,7 +160,7 @@ css_styles = """
     /* 序號欄位寬度調整 */
     .dataframe th:nth-child(2), .dataframe td:nth-child(2),
     table th:nth-child(2), table td:nth-child(2) {
-        width: 180px !important;
+        width: 100px !important;
         min-width: 180px !important;
         text-align: center !important;
     }
@@ -534,4 +534,5 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
