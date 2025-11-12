@@ -162,6 +162,7 @@ css_styles = """
     table th:nth-child(2), table td:nth-child(2) {
         width: 180px !important;
         min-width: 180px !important;
+        text-align: center !important;
     }
     
     /* 成功/錯誤訊息 */
