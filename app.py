@@ -492,16 +492,15 @@ elif search_button and not search_number:
     st.warning("請輸入抽獎序號")
 
 # ==================== 完整抽獎名單 ====================
-st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
+st.markdown('<div class="section-header"><h2>🎁 完整抽獎名單</h2></div>', unsafe_allow_html=True)
 
-# 顯示完整名單
-with st.expander("📋 點擊展開完整得獎名單"):
-    if not df.empty:
-        # 使用 df.to_html() 並設定 index=False 來隱藏左邊的流水號，維持HTML格式
-        html_table = df.to_html(index=False, escape=False, classes='dataframe')
-        st.markdown(html_table, unsafe_allow_html=True)
-    else:
-        st.warning("目前尚無得獎名單資料")
+# 直接顯示完整名單
+if not df.empty:
+    # 使用 df.to_html() 並設定 index=False 來隱藏左邊的流水號，維持HTML格式
+    html_table = df.to_html(index=False, escape=False, classes='dataframe')
+    st.markdown(html_table, unsafe_allow_html=True)
+else:
+    st.warning("目前尚無得獎名單資料")
 
 # 領獎須知
 st.markdown("""
@@ -528,10 +527,3 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
-
-
-
-
-
-
-
