@@ -266,57 +266,153 @@ header_html = """
 """
 st.markdown(header_html, unsafe_allow_html=True)
 
+# ==================== 抽獎名單資料 ====================
+def get_lottery_data():
+    """獲取抽獎名單資料 - 直接在程式中定義"""
+    lottery_data = [
+        ("EVALUE 5萬充電點數", "779"),
+        ("Sliders電動自行車", "999"),
+        ("JOWUA電動滑板車", "3"),
+        ("瑪雅之家住宿券", "4"),
+        ("瑪雅之家住宿券", "995"),
+        ("VNW EV系列前擋隔熱紙", "994"),
+        ("VNW EV系列前擋隔熱紙", "993"),
+        ("JOWUA雙用行動充電器", "992"),
+        ("3D 折疊式輪胎桌架", "991"),
+        ("3D 卡固立體車踏墊", "990"),
+        ("JOWUA $5500官網購物金", "989"),
+        ("3D 多功能輪胎梯架", "988"),
+        ("JOWUA 座椅下摺疊收納盒+超細纖維擦車布", "987"),
+        ("福斯T1野餐墊", "986"),
+        ("福斯T1野餐墊", "985"),
+        ("福斯T1野餐墊", "984"),
+        ("福斯T1野餐墊", "983"),
+        ("福斯T1野餐墊", "982"),
+        ("KIMBLADE 前檔雨刷", "981"),
+        ("KIMBLADE 前檔雨刷", "980"),
+        ("KIMBLADE 前檔雨刷", "979"),
+        ("KIMBLADE 前檔雨刷", "978"),
+        ("KIMBLADE 前檔雨刷", "977"),
+        ("KIMBLADE 前檔雨刷", "976"),
+        ("KIMBLADE 前檔雨刷", "975"),
+        ("KIMBLADE 前檔雨刷", "974"),
+        ("KIMBLADE 前檔雨刷", "973"),
+        ("KIMBLADE 前檔雨刷", "972"),
+        ("保時捷 盾徽紙鎮", "971"),
+        ("保時捷 Taycan Turbo紙鎮", "970"),
+        ("3D 萬用木紋摺疊置物箱", "969"),
+        ("JOWUA 堆疊收納箱30L(兩入)", "968"),
+        ("保時捷 保溫杯", "967"),
+        ("保時捷 保溫杯", "966"),
+        ("Sliders 自行車包", "965"),
+        ("保時捷 Macan 車型針織袋", "964"),
+        ("保時捷 Macan 車型針織袋", "963"),
+        ("保時捷 Macan 車型針織袋", "962"),
+        ("保時捷 Taycan 車型針織袋", "961"),
+        ("保時捷 Taycan 車型針織袋", "960"),
+        ("保時捷 Taycan 車型針織袋", "959"),
+        ("3D 鋁合金高背摺疊椅", "958"),
+        ("3D 鋁合金高背摺疊椅", "957"),
+        ("3D 露營帳篷造型面紙盒套一組(兩個)", "956"),
+        ("3D 露營帳篷造型面紙盒套一組(兩個)", "955"),
+        ("車麻吉 $1000停車金", "954"),
+        ("車麻吉 $1000停車金", "953"),
+        ("車麻吉 $1000停車金", "952"),
+        ("車麻吉 $1000停車金", "951"),
+        ("車麻吉 $1000停車金", "950"),
+        ("車麻吉 $1000停車金", "949"),
+        ("車麻吉 $1000停車金", "948"),
+        ("車麻吉 $1000停車金", "947"),
+        ("車麻吉 $1000停車金", "946"),
+        ("車麻吉 $1000停車金", "945"),
+        ("車麻吉 $1000停車金", "944"),
+        ("車麻吉 $1000停車金", "943"),
+        ("車麻吉 $1000停車金", "942"),
+        ("車麻吉 $1000停車金", "941"),
+        ("車麻吉 $1000停車金", "940"),
+        ("車麻吉 $1000停車金", "939"),
+        ("車麻吉 $1000停車金", "938"),
+        ("車麻吉 $1000停車金", "937"),
+        ("車麻吉 $1000停車金", "936"),
+        ("車麻吉 $1000停車金", "935"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("車麻吉 $1000停車金", "尚未抽獎"),
+        ("3D Wildrest兩用托特野餐墊", "尚未抽獎"),
+        ("3D Wildrest兩用托特野餐墊", "尚未抽獎"),
+        ("3D Wildrest雙飲保溫瓶", "尚未抽獎"),
+        ("3D Wildrest雙飲保溫瓶", "尚未抽獎"),
+        ("3D Wildrest雙飲保溫瓶", "尚未抽獎"),
+        ("3D 不鏽鋼馬克杯一組(兩個)", "尚未抽獎"),
+        ("3D 不鏽鋼馬克杯一組(兩個)", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("車麻吉 $500停車金", "尚未抽獎"),
+        ("一級淨 除油垢極淨噴霧", "尚未抽獎"),
+        ("一級淨 除油垢極淨噴霧", "尚未抽獎"),
+        ("一級淨 除油垢極淨噴霧", "尚未抽獎"),
+        ("一級淨 除油垢極淨噴霧", "尚未抽獎"),
+        ("一級淨 除水垢極淨慕斯", "尚未抽獎"),
+        ("一級淨 除水垢極淨慕斯", "尚未抽獎"),
+        ("一級淨 除水垢極淨慕斯", "尚未抽獎"),
+        ("一級淨 除水垢極淨慕斯", "尚未抽獎"),
+        ("一級淨 萬用布20抽", "尚未抽獎"),
+        ("一級淨 萬用布20抽", "尚未抽獎"),
+        ("一級淨 萬用布20抽", "尚未抽獎"),
+        ("一級淨 萬用布20抽", "尚未抽獎"),
+        ("一級淨 萬用布20抽", "尚未抽獎"),
+    ]
+    
+    # 轉換為 DataFrame
+    df = pd.DataFrame(lottery_data, columns=["獎項", "序號"])
+    return df
+
 # ==================== 抽獎查詢 ====================
 st.markdown('<div class="section-header"><h2>🎁 抽獎名單查詢</h2></div>', unsafe_allow_html=True)
-
-# 載入得獎名單 - 每次執行都重新載入
-def load_lottery_data():
-    """從 GitHub 載入抽獎名單資料 - 強制重新載入"""
-    import urllib.request
-    
-    # 生成唯一的查詢參數避免快取
-    current_time = int(time.time())
-    random_id = random.randint(100000, 999999)
-    
-    try:
-        # 使用多重防快取策略的 URL
-        base_url = "https://cdn.jsdelivr.net/gh/EVALUE-CPU/EVALUE_Day/winners.csv"
-        cache_buster = f"?_t={current_time}&_r={random_id}&_nocache=true"
-        github_url = base_url + cache_buster
-        
-        # 強制無快取的 HTTP 標頭
-        headers = {
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0, private',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'If-Modified-Since': 'Thu, 01 Jan 1970 00:00:00 GMT',
-            'User-Agent': f'StreamlitRefresh/{current_time}'
-        }
-        
-        # 建立請求並載入
-        request = urllib.request.Request(github_url, headers=headers)
-        
-        with urllib.request.urlopen(request) as response:
-            # 直接從回應載入 pandas DataFrame
-            df = pd.read_csv(response, encoding='utf-8')
-        
-        # 驗證必要欄位
-        required_columns = ["獎項", "序號"]
-        if all(col in df.columns for col in required_columns):
-            return df[required_columns].copy()  # 使用 copy() 確保是新的 DataFrame
-        else:
-            st.error(f"CSV 檔案格式錯誤：需包含 {required_columns} 欄位")
-            return pd.DataFrame(columns=required_columns)
-            
-    except urllib.error.HTTPError as http_err:
-        st.error(f"HTTP 錯誤：{http_err.code} - {http_err.reason}")
-        return pd.DataFrame(columns=["獎項", "序號"])
-    except urllib.error.URLError as url_err:
-        st.error(f"網路連線錯誤：{url_err.reason}")
-        return pd.DataFrame(columns=["獎項", "序號"])
-    except Exception as e:
-        st.error(f"載入資料失敗：{str(e)}")
-        return pd.DataFrame(columns=["獎項", "序號"])
 
 # 驗證輸入只包含數字的函數
 def is_valid_number(value):
@@ -340,8 +436,8 @@ with col1:
 with col2:
     search_button = st.button("查詢", type="primary", use_container_width=True, key="search_btn")
 
-# 每次都重新載入資料（無快取）
-df = load_lottery_data()
+# 載入抽獎資料
+df = get_lottery_data()
 
 # 搜尋結果
 if search_button and search_number:
@@ -379,16 +475,6 @@ elif search_button and not search_number:
 
 # ==================== 完整抽獎名單 ====================
 st.markdown('<div class="section-header"><h2>🎁 查看完整抽獎名單</h2></div>', unsafe_allow_html=True)
-
-# 更新按鈕
-col_update1, col_update2, col_update3 = st.columns([2, 1, 2])
-with col_update2:
-    if st.button("🔄 更新名單", type="secondary", use_container_width=True, key="refresh_list_btn"):
-        # 強制重新載入資料
-        df = load_lottery_data()
-        st.success("✅ 名單已更新！")
-        # 使用 st.rerun() 刷新頁面顯示
-        st.rerun()
 
 # 顯示完整名單
 with st.expander("📋 點擊展開完整得獎名單"):
