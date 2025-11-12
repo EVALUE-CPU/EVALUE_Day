@@ -266,6 +266,23 @@ header_html = """
 """
 st.markdown(header_html, unsafe_allow_html=True)
 
+# ==================== 活動地圖 ====================
+import time
+import streamlit as st
+
+# ==================== 活動地圖 ====================
+st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
+
+# 活動地圖圖片 URL (加上時間戳避免快取)
+map_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png?cache_bust={int(time.time())}"
+
+st.markdown(f"""
+<div style="text-align: center; margin: 0.1rem 0;">
+    <img src="{map_url}" alt="活動地圖" style="max-width: 100%; height: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+</div>
+""", unsafe_allow_html=True)
+
+
 # ==================== 抽獎名單資料 ====================
 def get_lottery_data():
     """獲取抽獎名單資料 - 直接在程式中定義"""
@@ -497,21 +514,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ==================== 活動地圖 ====================
-import time
-import streamlit as st
 
-# ==================== 活動地圖 ====================
-st.markdown('<div class="section-header"><h2>🗺️ 活動地圖</h2></div>', unsafe_allow_html=True)
-
-# 活動地圖圖片 URL (加上時間戳避免快取)
-map_url = f"https://raw.githubusercontent.com/EVALUE-CPU/EVALUE_Day/main/map.png?cache_bust={int(time.time())}"
-
-st.markdown(f"""
-<div style="text-align: center; margin: 0.1rem 0;">
-    <img src="{map_url}" alt="活動地圖" style="max-width: 100%; height: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-</div>
-""", unsafe_allow_html=True)
 
 # ==================== 頁尾 ====================
 st.markdown("---")
@@ -525,6 +528,7 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
 
