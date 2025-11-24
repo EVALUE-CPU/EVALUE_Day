@@ -295,7 +295,7 @@ st.markdown(f"""
 def get_lottery_data():
     """獲取抽獎名單資料 - 直接在程式中定義"""
     lottery_data = [
-        (" 頭獎 _ EVALUE _ EVALUE 50,000 點數  ", "1"),
+        (" 頭獎 _ EVALUE _ EVALUE 50,000 點數  ", ""),
         (" 二獎 _ Sliders _ Slider 電動自行車 ", ""),
         (" 三獎 _ Jowua _ Jowua 電動滑板車 ", ""),
         (" 四獎 _ 光辰 _ 光辰奈米陶瓷氮化金屬膜", ""),
@@ -553,6 +553,7 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
 
