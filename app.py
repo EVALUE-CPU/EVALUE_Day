@@ -344,12 +344,12 @@ def get_lottery_data():
         ("二十六獎_Slider自行車包", "尚未抽出"),
         ("二十六獎_Slider自行車包", "尚未抽出"),
         ("二十六獎_Slider自行車包", "尚未抽出"),
-        ("二十七獎_PorscheMacan車型針織袋", "尚未抽出"),
-        ("二十七獎_PorscheMacan車型針織袋", "尚未抽出"),
-        ("二十七獎_PorscheMacan車型針織袋", "尚未抽出"),
+        ("二十七獎_PorscheMacan車型針織袋", "57"),
+        ("二十七獎_PorscheMacan車型針織袋", "1255"),
+        ("二十七獎_PorscheMacan車型針織袋", "1250"),
         ("二十八獎_PorscheTaycan車型針織袋", "尚未抽出"),
         ("二十八獎_PorscheTaycan車型針織袋", "尚未抽出"),
-        ("二十八獎_PorscheTaycan車型針織袋", "尚未抽出"),
+        ("二十八獎_PorscheTaycan車型針織袋", "1378"),
         ("二十九獎_德國萊因TUV中古車驗車代金卷", "495"),
         ("二十九獎_德國萊因TUV中古車驗車代金卷", "1571"),
         ("二十九獎_德國萊因TUV中古車驗車代金卷", "210"),
@@ -449,6 +449,7 @@ def get_lottery_data():
         ("三十九獎_3D卡固Wildrest雙飲保溫瓶", "1114"),
         ("三十九獎_3D卡固Wildrest雙飲保溫瓶", "1084"),
         ("三十九獎_3D卡固Wildrest雙飲保溫瓶", "241"),
+
     ]
     
     # 轉換為 DataFrame
@@ -553,6 +554,7 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
 
