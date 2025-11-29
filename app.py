@@ -341,7 +341,7 @@ def get_lottery_data():
         ("二十六獎_Slider自行車包", "1505"),
         ("二十六獎_Slider自行車包", "1447"),
         ("二十六獎_Slider自行車包", "1149"),
-        ("二十六獎_Slider自行車包", "145"),
+        ("二十六獎_Slider自行車包", "1452"),
         ("二十六獎_Slider自行車包", "1532"),
         ("二十六獎_Slider自行車包", "778"),
         ("二十七獎_PorscheMacan車型針織袋", "57"),
@@ -553,6 +553,7 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
 
