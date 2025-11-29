@@ -296,7 +296,7 @@ def get_lottery_data():
     """獲取抽獎名單資料 - 直接在程式中定義"""
     lottery_data = [
         ("頭獎_EVALUE50,000點數", "尚未抽出"),
-        ("二獎_Slider電動自行車", "尚未抽出"),
+        ("二獎_Slider電動自行車", "740"),
         ("三獎_Jowua電動滑板車", "881"),
         ("四獎_光辰奈米陶瓷氮化金屬膜", "1033"),
         ("四獎_光辰奈米陶瓷氮化金屬膜", "158"),
@@ -553,6 +553,7 @@ footer_html = """
 </div>
 """
 st.markdown(footer_html, unsafe_allow_html=True)
+
 
 
 
